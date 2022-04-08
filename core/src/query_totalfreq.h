@@ -15,8 +15,8 @@ public:
                     function<vector<float>(RCover *)> *tids_error_class_callback = nullptr,
                     function<vector<float>(RCover *)> *supports_error_class_callback = nullptr,
                     function<float(RCover *)> *tids_error_callback = nullptr,
-                    float maxError = NO_ERR,
-                    bool stopAfterError = false);
+                    float* maxError = nullptr,
+                    bool* stopAfterError = nullptr);
 
     ~Query_TotalFreq();
 
@@ -24,7 +24,7 @@ public:
 
     bool is_pure(pair<Supports, Support> supports);
 
-    bool updateData(QueryData *best, Error upperBound, Attribute attribute, QueryData *left, QueryData *right);
+    bool updateData(QueryData *best, Error* upperBound, Attribute attribute, QueryData *left, QueryData *right, Error* minlb);
 
     QueryData *initData(RCover *tid, Depth currentMaxDepth = -1);
 

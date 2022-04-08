@@ -4,9 +4,36 @@
 #include <math.h>
 #include "rCover.h"
 
+class QuantileLossComputer {
+    int n_quantiles;
+    double *h;
+    int *h_low;
+    int *h_up;
+    double *y_low;
+    double *y_pred;
+    double *under;
+    double *above;
 
-double sse_tids_error(RCover* cover);
 
-double quantile_tids_error(RCover* cover);
+
+    public: 
+        QuantileLossComputer(int n_quantiles);
+
+        ~QuantileLossComputer() {
+            delete[] h;
+            delete[] h_low;
+            delete[] h_up;
+            delete[] y_low;
+            delete[] y_pred;
+            delete[] under;
+            delete[] above;
+        }
+
+        Error * quantile_tids_errors(RCover* cover);
+};
+
+
+float sse_tids_error(RCover* cover);
+
 
 #endif

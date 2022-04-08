@@ -2,8 +2,7 @@ from setuptools import Extension, find_packages, setup
 from Cython.Build import cythonize
 import platform
 import codecs
-# from .dl85 import __version__
-__version__ = "0.1.2"
+from _version import __version__
 
 
 DISTNAME = 'pydl8.5'
@@ -99,6 +98,8 @@ setup(
     zip_safe=True,  # the package can run out of an .egg file
     ext_modules=cythonize(
         [dl85_extension],
-        compiler_directives={"language_level": "3"}
-    )
+        compiler_directives={"language_level": "3"},
+        gdb_debug=True,
+    ),
+    
 )

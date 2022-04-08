@@ -13,8 +13,8 @@ string search(Supports supports,
               double *float_target,
               int maxdepth,
               int minsup,
-              float maxError,
-              bool stopAfterError,
+              float* maxError,
+              bool* stopAfterError,
               function<vector<float>(RCover *)> tids_error_class_callback,
               function<vector<float>(RCover *)> supports_error_class_callback,
               function<float(RCover *)> tids_error_callback,
@@ -26,7 +26,8 @@ string search(Supports supports,
               bool infoAsc,
               bool repeatSort,
               int backup_error,
-              float q,
+              float* quantiles,
+              int nquantiles,
               int timeLimit,
               bool verbose_param) {
 
@@ -43,8 +44,19 @@ string search(Supports supports,
     verbose = verbose_param;
     string out = "";
 
-    auto *dataReader = new DataManager(supports, ntransactions, nattributes, nclasses, data, target, float_target, backup_error, q);
+    if (stopAfterError == nullptr) {
+        stopAfterError = new bool[nquantiles];
+        for (int i = 0; i< nquantiles; i++) 
+            stopAfterError[i] = false;
+    }
 
+    if (maxError == nullptr) {
+        maxError = new float[nquantiles];
+        for (int i = 0; i< nquantiles; i++) 
+            maxError[i] = 0;
+    }
+
+    auto *dataReader = new DataManager(supports, ntransactions, nattributes, nclasses, data, target, float_target, backup_error, quantiles, nquantiles);
 
     vector<float> weights;
     if (in_weights) weights = vector<float>(in_weights, in_weights + ntransactions);
@@ -66,22 +78,39 @@ string search(Supports supports,
     RCover *cover;
     if (in_weights) cover = new RCoverWeighted(dataReader, &weights); // weighted cover
     else cover = new RCoverTotalFreq(dataReader); // non-weighted cover
+
+
     auto lcm = new LcmPruned(cover, query, infoGain, infoAsc, repeatSort);
     auto start_tree = high_resolution_clock::now();
     ((LcmPruned *) lcm)->run(); // perform the search
     auto stop_tree = high_resolution_clock::now();
-    Tree *tree_out = new Tree();
-    query->printResult(tree_out); // build the tree model
-    tree_out->latSize = ((LcmPruned *) lcm)->latticesize;
-    tree_out->searchRt = duration<double>(stop_tree - start_tree).count();
-    out += tree_out->to_str();
+    Tree **out_trees = new Tree*[cover->dm->getNQuantiles()];
+    for (int i = 0; i < cover->dm->getNQuantiles(); i++) {
+        out_trees[i] = new Tree();
+        query->printResult(out_trees[i], i);
+        out_trees[i]->latSize = ((LcmPruned *) lcm)->latticesize;
+        out_trees[i]->searchRt = duration<double>(stop_tree - start_tree).count();
+    }
+
+    //query->printResult(tree_out); // build the tree model
+
+    out += "Trees: \n";
+    for (int i = 0; i < cover->dm->getNQuantiles(); i++) {
+        out += out_trees[i]->to_str();
+        out += "\n";
+
+    }
 
     delete trie;
     delete query;
     delete dataReader;
     delete cover;
     delete lcm;
-    delete tree_out;
+
+    for (int i = 0; i < cover->dm->getNQuantiles(); i++) {
+        delete out_trees[i];
+    }
+    delete[] out_trees;
 
 //    auto stop = high_resolution_clock::now();
 //    cout << "Durée totale de l'algo : " << duration<double>(stop - start).count() << endl;

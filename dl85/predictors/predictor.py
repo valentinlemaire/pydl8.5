@@ -1,3 +1,4 @@
+from statistics import quantiles
 from sklearn.base import BaseEstimator
 from sklearn.utils.validation import assert_all_finite, check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels
@@ -63,7 +64,7 @@ class DL85Predictor(BaseEstimator):
     print_output : bool, default=False
         A parameter used to indicate if the search output will be printed or not
     backup_error : str, default="misclassification"
-        Predefined error function to be optimized and corresponding leaf values. It is used if the corresponding user defined arguments (error_function, fast_error_function for the error and leaf_value_function) are None. Must be one of {"misclassification", "mse", "quantile}
+        Predefined error function to be optimized and corresponding leaf values. It is used if the corresponding user defined arguments (error_function, fast_error_function for the error and leaf_value_function) are None. Must be one of {"misclassification", "mse"}
 
     Attributes
     ----------
@@ -104,14 +105,15 @@ class DL85Predictor(BaseEstimator):
             quiet=True,
             print_output=False, 
             backup_error="misclassification",
-            quantile_value=0.5):
+            quantile_value=0.5,):
+
         self.max_depth = max_depth
         self.min_sup = min_sup
         self.sample_weight = []
         self.error_function = error_function
         self.fast_error_function = fast_error_function
-        self.max_error = max_error
-        self.stop_after_better = stop_after_better
+        self.max_errors = np.array([max_error])
+        self.stop_after_better = np.array([stop_after_better])
         self.time_limit = time_limit
         self.verbose = verbose
         self.desc = desc
@@ -119,9 +121,9 @@ class DL85Predictor(BaseEstimator):
         self.repeat_sort = repeat_sort
         self.leaf_value_function = leaf_value_function
         self.backup_error = backup_error
-        self.quantile_value = quantile_value
         self.quiet = quiet
         self.print_output = print_output
+        self.quantile_value = quantile_value
 
         self.tree_ = None
         self.size_ = -1
@@ -195,33 +197,33 @@ class DL85Predictor(BaseEstimator):
                                        max_depth=self.max_depth,
                                        min_sup=self.min_sup,
                                        example_weights=self.sample_weight,
-                                       max_error=self.max_error,
+                                       max_error=self.max_errors,
                                        stop_after_better=self.stop_after_better,
                                        time_limit=self.time_limit,
                                        verb=self.verbose,
                                        desc=self.desc,
                                        asc=self.asc,
                                        repeat_sort=self.repeat_sort,
-                                       quantile_value=self.quantile_value)
+                                       quantiles=np.array([self.quantile_value]))
         # if self.print_output:
         #     print(solution)
 
         solution = solution.rstrip("\n").splitlines()
         self.sol_size = len(solution)
 
-        if self.sol_size == 9:  # solution found
-            self.tree_ = json.loads(solution[1].split('Tree: ')[1])
-            self.size_ = int(solution[2].split(" ")[1])
-            self.depth_ = int(solution[3].split(" ")[1])
-            self.error_ = float(solution[4].split(" ")[1])
-            self.lattice_size_ = int(solution[6].split(" ")[1])
-            self.runtime_ = float(solution[7].split(" ")[1])
-            self.timeout_ = bool(strtobool(solution[8].split(" ")[1]))
-            if self.size_ >= 3 or self.max_error <= 0:
-                self.accuracy_ = float(solution[5].split(" ")[1])
+        if self.sol_size == 10:  # solution found
+            self.tree_ = json.loads(solution[2].split('Tree: ')[1])
+            self.size_ = int(solution[3].split(" ")[1])
+            self.depth_ = int(solution[4].split(" ")[1])
+            self.error_ = float(solution[5].split(" ")[1])
+            self.lattice_size_ = int(solution[7].split(" ")[1])
+            self.runtime_ = float(solution[8].split(" ")[1])
+            self.timeout_ = bool(strtobool(solution[9].split(" ")[1]))
+            if self.size_ >= 3 or self.max_errors[0] <= 0:
+                self.accuracy_ = float(solution[6].split(" ")[1])
 
             # if sol_size == 8:  # without timeout
-            if self.size_ < 3 and self.max_error > 0:  # return just a leaf as fake solution
+            if self.size_ < 3 and self.max_errors[0] > 0:  # return just a leaf as fake solution
                 if not self.timeout_:
                     print("DL8.5 fitting: Solution not found. However, a solution exists with error equal to the "
                       "max error you specify as unreachable. Please increase your bound if you want to reach it.")
@@ -398,7 +400,7 @@ class DL85Predictor(BaseEstimator):
         names = [x[0] for x in node.items()]
         return 'error' in names
 
-    def add_transactions_and_proba(self, X, y=None):  # explore the decision tree found and add transactions to leaf nodes.
+    def add_transactions_and_proba(self, X, y=None, tree=None):  # explore the decision tree found and add transactions to leaf nodes.
         def recurse(transactions, node, feature, positive):
             if transactions is None:
                 current_transactions = list(range(0, X.shape[0]))
@@ -459,10 +461,10 @@ class DL85Predictor(BaseEstimator):
                         recurse(current_transactions, node['left'], node['feat'], True)
                         recurse(current_transactions, node['right'], node['feat'], False)
 
-        root_node = self.tree_
+        root_node = self.tree_ if tree is None else tree
         recurse(None, root_node, None, None)
 
-    def tree_without_transactions(self):
+    def tree_without_transactions(self, tree_=None):
 
         def recurse(node):
             if 'transactions' in node and ('feat' in node.keys() or 'value' in node.keys()):
@@ -471,20 +473,23 @@ class DL85Predictor(BaseEstimator):
                     recurse(node['left'])
                     recurse(node['right'])
 
-        tree = dict(self.tree_)
+        tree = dict(self.tree_) if tree_ is None else tree_
         recurse(tree)
         return tree
 
-    def remove_transactions(self):
+    def remove_transactions(self, tree_=None):
         def recurse(node):
             if 'transactions' in node and ('feat' in node.keys() or 'value' in node.keys()):
                 del node['transactions']
                 if 'left' in node.keys():
                     recurse(node['left'])
                     recurse(node['right'])
-        recurse(self.tree_)
 
-    def export_graphviz(self):
+        tree = self.tree_ if tree_ is None else tree_
+    
+        recurse(tree)
+
+    def export_graphviz(self, tree_=None):
         if self.is_fitted_ is False:  # fit method has not been called
             raise NotFittedError("Call fit method first" % {'name': type(self).__name__})
 
@@ -502,7 +507,9 @@ class DL85Predictor(BaseEstimator):
                        "node [shape=record]; \n"
 
         # build the body
-        graph_string += get_dot_body(self.tree_)
+        tree = self.tree_ if tree_ is None else tree_
+
+        graph_string += get_dot_body(tree)
 
         # end by the footer
         graph_string += "}"

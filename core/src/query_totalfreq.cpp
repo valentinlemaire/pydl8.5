@@ -10,7 +10,8 @@ Query_TotalFreq::Query_TotalFreq(Support minsup,
                                  function<vector<float>(RCover *)> *tids_error_class_callback,
                                  function<vector<float>(RCover *)> *supports_error_class_callback,
                                  function<float(RCover *)> *tids_error_callback,
-                                 float maxError, bool stopAfterError) :
+                                 float* maxError, 
+                                 bool* stopAfterError) :
         Query_Best(minsup,
                    maxdepth,
                    trie,
@@ -19,8 +20,25 @@ Query_TotalFreq::Query_TotalFreq(Support minsup,
                    tids_error_class_callback,
                    supports_error_class_callback,
                    tids_error_callback,
-                   (maxError <= 0) ? NO_ERR : maxError,
-                   (maxError <= 0) ? false : stopAfterError) {}
+                   maxError,
+                   stopAfterError) {
+
+                       if (maxError == nullptr) {
+                           maxError = new float[data->getNQuantiles()];
+                           stopAfterError = new bool[data->getNQuantiles()];
+                           for (int i = 0; i < data->getNQuantiles(); i++) {
+                               maxError[i] == NO_ERR;
+                               stopAfterError[i] = false;
+                           }
+                       } else {
+                           for (int i = 0; i < data->getNQuantiles(); i++) {
+                               maxError[i] = maxError[i] <= 0 ? NO_ERR : maxError[i];
+                               stopAfterError[i] = maxError[i] <= 0 ? false : stopAfterError[i];
+                           }
+                       }
+
+                       quantileLossComputer = new QuantileLossComputer(data->getNQuantiles());
+                   }
 
 
 Query_TotalFreq::~Query_TotalFreq() {}
@@ -41,26 +59,41 @@ bool Query_TotalFreq::is_pure(pair<Supports, Support> supports) {
     return ((long int) minsup - (long int) (supports.second - majnum)) > (long int) secmajnum;
 }
 
-bool Query_TotalFreq::updateData(QueryData *best, Error upperBound, Attribute attribute, QueryData *left, QueryData *right) {
+bool Query_TotalFreq::updateData(QueryData *best, Error* upperBound, Attribute attribute, QueryData *left, QueryData *right, Error* minlb) {
     QueryData_Best *best2 = (QueryData_Best *) best, *left2 = (QueryData_Best *) left, *right2 = (QueryData_Best *) right;
-    Error error = left2->error + right2->error;
-    Size size = left2->size + right2->size + 1;
-    if (error < upperBound || (floatEqual(error, upperBound) && size < best2->size)) {
-        best2->error = error;
-        best2->left = left2;
-        best2->right = right2;
-        best2->size = size;
-        best2->test = attribute;
-        return true;
+    Error error;
+    Size size;
+
+    bool changed = false;
+
+    for (int i = 0; i < dm->getNQuantiles(); i++) {
+        error = left2->errors[i] + right2->errors[i];
+        size = left2->sizes[i] + right2->sizes[i] + 1;
+
+        // TODO VALENTIN : check if this is correct
+        if ((error < upperBound[i])  || (floatEqual(error, upperBound[i]) && size < best2->sizes[i])) {
+            best2->errors[i] = error;
+            best2->lefts[i] = left2;
+            best2->rights[i] = right2;
+            best2->sizes[i] = size;
+            best2->tests[i] = attribute;
+
+            upperBound[i] = error;
+            changed = true;
+        } else {
+            minlb[i] = fmin(minlb[i], error);
+        }
     }
-    return false;
+    
+    return changed;
 }
 
 QueryData *Query_TotalFreq::initData(RCover *cover, Depth currentMaxDepth) {
     Class maxclass = -1;
     Error error;
+    Error * errors = nullptr;
 
-    auto *data = new QueryData_Best();
+    auto *data = new QueryData_Best(dm->getNQuantiles());
 
     //fast or default error. support will be used
     if (tids_error_class_callback == nullptr && tids_error_callback == nullptr) {
@@ -81,9 +114,8 @@ QueryData *Query_TotalFreq::initData(RCover *cover, Depth currentMaxDepth) {
             } else if (dm->getBackupError() == MSE_ERROR) {
                 error = sse_tids_error(cover);
             } else if (dm->getBackupError() == QUANTILE_ERROR) {
-                error = quantile_tids_error(cover);
+                errors = quantileLossComputer->quantile_tids_errors(cover);
             }
-            
         }
     }
     //slow error or predictor error function. Not need to compute support
@@ -98,9 +130,19 @@ QueryData *Query_TotalFreq::initData(RCover *cover, Depth currentMaxDepth) {
             maxclass = int(infos[1]);
         }
     }
-    data->test = maxclass;
-    data->leafError = error;
-    data->error += error;
+
+    if (errors) {
+        for (int i = 0; i < dm->getNQuantiles(); i++) {
+            data->errors[i] += errors[i];
+            data->leafErrors[i] = errors[i];
+        }
+
+        delete[] errors;
+    } else {
+        data->errors[0] += error;
+        data->leafErrors[0] = error;
+        data->tests[0] = maxclass;
+    }
 
     return (QueryData *) data;
 }

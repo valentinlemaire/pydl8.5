@@ -78,16 +78,19 @@ public:
         explicit iterator(RCover *container_, size_t index = 0, bool trans = false) : container(container_) {
             if (trans){
                 trans_loop = true;
-                if (index == -1)
-                    wordIndex = container->limit.top();
-                else if (index == 0){
+                if (index == -1) {
+                    wordIndex = container->limit.top() - 1;
+                    ordered = true;
+                } else if (index == 0) {
                     wordIndex = index;
-                    pos = 0;
-                    transInd = 0;
-                    first = true;
-                    word = container->coverWords[container->validWords[0]].top();
-                    setNextTransID();
-                }
+                    ordered = false;
+                } 
+
+                pos = 0;
+                transInd = 0;
+                first = true;
+                word = container->coverWords[container->validWords[wordIndex]].top();
+                setNextTransID();
 
             } else{
                 trans_loop = false;
@@ -108,7 +111,7 @@ public:
         }
 
         void setNextTransID() {
-            if (wordIndex < container->limit.top()) {
+            if ((wordIndex >= 0 && ordered) || (wordIndex < container->limit.top() && !ordered)) {
                 int indexForTransactions = container->nWords - (container->validWords[wordIndex]+1);
                 int pos = getFirstSetBitPos(word.to_ulong());
 
@@ -123,10 +126,13 @@ public:
                     value = indexForTransactions * M + transInd;
                     word = (word >> pos);
                 } else{
-                    ++wordIndex;
+                    if (ordered)
+                        --wordIndex;
+                    else 
+                        ++wordIndex;
                     transInd = 0;
                     first = true;
-                    if (wordIndex < container->limit.top()){
+                    if ((wordIndex >= 0 && ordered) || (wordIndex < container->limit.top() && !ordered)){
                         word = container->coverWords[container->validWords[wordIndex]].top();
                         setNextTransID();
                     }
@@ -180,6 +186,7 @@ public:
         bool first;
         bitset<M> word;
         bool trans_loop;
+        bool ordered = false;
         //int ntrans = -1;
         //int alltransInd;
 

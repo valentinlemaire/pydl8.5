@@ -18,8 +18,8 @@ TrieNode* computeDepthTwo(RCover*, Error, Array<Attribute>, Attribute, Array<Ite
 struct TreeTwo{
     QueryData_Best* root_data;
 
-    TreeTwo(){
-        root_data = new QueryData_Best();
+    TreeTwo(int n_quantiles){
+        root_data = new QueryData_Best(n_quantiles);
     }
 
     void replaceTree(TreeTwo* cpy){
@@ -28,17 +28,17 @@ struct TreeTwo{
     }
 
     void free(){
-        if (root_data->left || root_data->right){
-            if (root_data->left->left || root_data->left->right){
-                delete root_data->left->left;
-                delete root_data->left->right;
+        if (root_data->lefts[0] || root_data->rights[0]){
+            if (root_data->lefts[0]->lefts[0] || root_data->lefts[0]->rights[0]){
+                delete root_data->lefts[0]->lefts[0];
+                delete root_data->lefts[0]->rights[0];
             }
-            if (root_data->right->left || root_data->right->right){
-                delete root_data->right->left;
-                delete root_data->right->right;
+            if (root_data->rights[0]->lefts[0] || root_data->rights[0]->rights[0]){
+                delete root_data->rights[0]->lefts[0];
+                delete root_data->rights[0]->rights[0];
             }
-            delete root_data->left;
-            delete root_data->right;
+            delete root_data->lefts[0];
+            delete root_data->rights[0];
         }
         delete root_data;
     }

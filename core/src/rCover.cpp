@@ -47,9 +47,11 @@ RCover::RCover(DataManager *dmm, vector<float>* weights):dm(dmm) {
         rword.push(word);
         coverWords[i] = rword;
         validWords[i] = i;
+
     }
     limit.push(nWords);
     support = dm->getNTransactions();
+
 }
 
 RCover::RCover(RCover &&cover) noexcept {

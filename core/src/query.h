@@ -5,6 +5,7 @@
 #include "globals.h"
 #include "rCover.h"
 #include "dataManager.h"
+#include "predefined_error_functions.h"
 #include <iostream>
 #include <cfloat>
 #include <functional>
@@ -81,8 +82,8 @@ public:
           function<vector<float>(RCover *)> *tids_error_class_callback = nullptr,
           function<vector<float>(RCover *)> *supports_error_class_callback = nullptr,
           function<float(RCover *)> *tids_error_callback = nullptr,
-          float maxError = NO_ERR,
-          bool stopAfterError = false);
+          float* maxError = nullptr,
+          bool* stopAfterError = nullptr);
 
     virtual ~Query();
 
@@ -90,9 +91,9 @@ public:
 
     virtual bool is_pure(pair<Supports, Support> supports) = 0;
 
-    virtual bool canimprove(QueryData *left, Error ub) = 0;
+    virtual bool canimprove(QueryData *left, Error* ub, int n_quantiles) = 0;
 
-    virtual bool canSkip(QueryData *actualBest) = 0;
+    virtual bool canSkip(QueryData *actualBest, int n_quantiles) = 0;
 
     virtual QueryData *initData(RCover *tid, Depth currentMaxDepth = -1) = 0;
 
@@ -100,9 +101,9 @@ public:
 
     virtual LeafInfo computeLeafInfo(Supports itemsetSupport) = 0;
 
-    virtual bool updateData(QueryData *best, Error upperBound, Attribute attribute, QueryData *left, QueryData *right) = 0;
+    virtual bool updateData(QueryData *best, Error* upperBound, Attribute attribute, QueryData *left, QueryData *right, Error* minlb) = 0;
 
-    virtual void printResult(Tree *tree) = 0;
+    virtual void printResult(Tree *tree, int quantile_idx = 0) = 0;
 
     void setStartTime() { startTime = high_resolution_clock::now(); }
 
@@ -114,11 +115,12 @@ public:
     time_point<high_resolution_clock> startTime;
     int timeLimit;
     bool timeLimitReached = false;
-    float maxError = NO_ERR;
-    bool stopAfterError = false;
+    float* maxError = nullptr;
+    bool* stopAfterError = nullptr;
     function<vector<float>(RCover *)> *tids_error_class_callback = nullptr;
     function<vector<float>(RCover *)> *supports_error_class_callback = nullptr;
     function<float(RCover *)> *tids_error_callback = nullptr;
+    QuantileLossComputer* quantileLossComputer = nullptr;
 
 };
 
