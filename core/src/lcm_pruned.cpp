@@ -495,11 +495,6 @@ TrieNode *LcmPruned::recurse(Array<Item> itemset,
             itemsets[second_item].free();
             cover->backtrack();
 
-            Error feature_error[cover->dm->getNQuantiles()];
-            for (int i = 0; i < cover->dm->getNQuantiles(); i++) {
-                feature_error[i] = firstError[i] + secondError[i];
-            }
-
             bool hasUpdated = query->updateData(node->data, child_ub, next, nodes[0]->data, nodes[1]->data, minlb);
             
             if (query->canSkip(node->data, cover->dm->getNQuantiles())) {//lowerBound reached
