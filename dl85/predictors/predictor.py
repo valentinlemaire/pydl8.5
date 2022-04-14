@@ -105,7 +105,8 @@ class DL85Predictor(BaseEstimator):
             quiet=True,
             print_output=False, 
             backup_error="misclassification",
-            quantile_value=0.5,):
+            quantile_value=0.5,
+            quantile_mode="linear"):
 
         self.max_depth = max_depth
         self.min_sup = min_sup
@@ -124,6 +125,7 @@ class DL85Predictor(BaseEstimator):
         self.quiet = quiet
         self.print_output = print_output
         self.quantile_value = quantile_value
+        self.quantile_mode = quantile_mode
 
         self.tree_ = None
         self.size_ = -1
@@ -163,27 +165,21 @@ class DL85Predictor(BaseEstimator):
         opt_pred_func = self.error_function
         predict = True
 
-        if target_is_need:  # target-needed tasks (eg: classification, regression, etc.)
-            # Check that X and y have correct shape and raise ValueError if not
-            X, y = check_X_y(X, y, dtype='int32')
-            if self.leaf_value_function is None:
-                opt_pred_func = None
-                predict = False
-            else:
-                opt_func = None
-                opt_fast_func = None
-            # if opt_func is None and opt_pred_func is None:
-            #     print("No optimization criterion defined. Misclassification error is used by default.")
-        else:  # target-less tasks (clustering, etc.)
-            # Check that X has correct shape and raise ValueError if not
-            assert_all_finite(X)
-            X = check_array(X, dtype='int32')
-            if self.leaf_value_function is None:
-                opt_pred_func = None
-                predict = False
-            else:
-                opt_func = None
-                opt_fast_func = None
+        # Check that X and y have correct shape and raise ValueError if not
+        idx = np.argsort(y)
+        X = np.ascontiguousarray(X[idx])
+        y = np.ascontiguousarray(y[idx])
+
+        X, y = check_X_y(X, y, dtype='numeric')
+        if self.leaf_value_function is None:
+            opt_pred_func = None
+            predict = False
+        else:
+            opt_func = None
+            opt_fast_func = None
+        # if opt_func is None and opt_pred_func is None:
+        #     print("No optimization criterion defined. Misclassification error is used by default.")
+
 
         # sys.path.insert(0, "../../")
         import dl85Optimizer
@@ -204,7 +200,9 @@ class DL85Predictor(BaseEstimator):
                                        desc=self.desc,
                                        asc=self.asc,
                                        repeat_sort=self.repeat_sort,
-                                       quantiles=np.array([self.quantile_value]))
+                                       quantiles=np.array([self.quantile_value]),
+                                       quantile_mode=self.quantile_mode
+                                    )
         # if self.print_output:
         #     print(solution)
 

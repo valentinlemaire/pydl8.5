@@ -21,6 +21,9 @@ cdef extern from "../core/src/globals.h":
     cdef int MSE_ERROR 
     cdef int QUANTILE_ERROR
 
+    cdef int LINEAR
+    cdef int OPTIMAL
+
 cdef extern from "py_tid_error_class_function_wrapper.h":
     cdef cppclass PyTidErrorClassWrapper:
         PyTidErrorClassWrapper()
@@ -66,6 +69,7 @@ cdef extern from "../core/src/dl85.h":
                     int backup_error,
                     float* quantiles,
                     int nquantiles,
+                    int quantile_mode,
                     int timeLimit,
                     # map[int, pair[int, int]]* continuousMap,
                     # bool save,
@@ -90,6 +94,7 @@ def solve(data,
           repeat_sort=False,
           backup_error="misclassification",
           quantiles=np.array([0.5]),
+          quantile_mode="linear",
           # continuousMap=None,
           # bin_save=False,
           # predictor=False
@@ -116,6 +121,11 @@ def solve(data,
         backup_error_code = MSE_ERROR 
     elif backup_error == "quantile":
         backup_error_code = QUANTILE_ERROR
+
+    if quantile_mode == "linear":
+        quantile_mode_code = LINEAR 
+    elif quantile_mode == "optimal":
+        quantile_mode_code = OPTIMAL
 
     data = data.astype('int32')
     ntransactions, nattributes = data.shape
@@ -259,6 +269,7 @@ def solve(data,
                  backup_error = backup_error_code,
                  quantiles = quantiles_array,
                  nquantiles = nquantiles,
+                 quantile_mode = quantile_mode_code,
                  timeLimit = time_limit,
                  # continuousMap = NULL,
                  # save = bin_save,

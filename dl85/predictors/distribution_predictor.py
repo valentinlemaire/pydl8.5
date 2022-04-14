@@ -23,7 +23,9 @@ class DL85DistributionPredictor(DL85Predictor):
             leaf_value_function=None,
             quiet=True,
             print_output=False, 
-            quantiles=[0.5]):
+            quantiles=[0.5], 
+            quantile_mode="linear",
+        ):
         
         self.max_depth = max_depth
         self.min_sup = min_sup
@@ -42,6 +44,7 @@ class DL85DistributionPredictor(DL85Predictor):
         self.classes_ = []
         
         self.quantiles = sorted(quantiles)
+        self.quantile_mode = quantile_mode
 
         # if self.max_errors is None:
         #     self.max_errors = [0] * len(self.quantiles)
@@ -76,22 +79,24 @@ class DL85DistributionPredictor(DL85Predictor):
         y_p = np.quantile(y, q)
         return y_p
 
-    @classmethod 
-    def quantile_error(cls, y, q):
-        y_p = np.quantile(y, q)
+    def quantile_error(self, y, tids, q):
+        y_p = self.leaf_value_function(tids, q)
 
-        error = 0
-        for y_i in y:
-            error += max(q*(y_p - y_i), (q-1)*(y_p - y_i))
+        delta = y_p - y[list(tids)]
+        delta[delta > 0] *= q
+        delta[delta < 0] *= q-1 
 
-        return error
+        return np.sum(delta)
 
+        
     def fit(self, X, y, sample_weight=None):
-        X, y = check_X_y(X, y, dtype='int32')
-
+        
         idx = np.argsort(y)
         X = X[idx]
         y = y[idx]
+
+        X, y = check_X_y(X, y, dtype='numeric')
+
 
         if self.leaf_value_function is None:
             self.leaf_value_function = lambda tids, q: self.quantile_leaf_value(y[list(tids)], q)
@@ -115,7 +120,9 @@ class DL85DistributionPredictor(DL85Predictor):
                                        desc=self.desc,
                                        asc=self.asc,
                                        repeat_sort=self.repeat_sort,
-                                       quantiles=self.quantiles)
+                                       quantiles=self.quantiles, 
+                                       quantile_mode=self.quantile_mode,
+                                    )
 
         solution = solution.splitlines()
         self.sol_size = len(solution)
@@ -167,6 +174,7 @@ class DL85DistributionPredictor(DL85Predictor):
                     # add transactions to nodes of the tree
 
                     leaf_fun = lambda tids: self.leaf_value_function(tids, self.quantiles[i])
+                    error_fun = lambda tids: self.quantile_error(y, tids, self.quantiles[i])
 
                     self.add_transactions_and_proba(X, y, tree=self.trees_[i]['tree'])
                     
@@ -175,8 +183,11 @@ class DL85DistributionPredictor(DL85Predictor):
                             search(node['left'])
                             search(node['right'])
                         else:
-                            node['value'] = self.leaf_value_function(node['transactions'], self.quantiles[i])
-                            node['error'] = leaf_fun(node['transactions'])
+                            print(node['error'])
+                            print(error_fun(node['transactions']))
+
+                            node['value'] = leaf_fun(node['transactions'])
+                            node['error'] = error_fun(node['transactions'])
                     node = self.trees_[i]['tree']
                     search(node)
 

@@ -69,8 +69,9 @@ class DL85Regressor(DL85Predictor, RegressorMixin):
         repeat_sort=False,
         leaf_value_function=None,
         print_output=False,
-        backup_error = "mse",
-        quantile_value = 0.5,
+        backup_error="mse",
+        quantile_value=0.5,
+        quantile_mode="linear",
     ):
 
         if backup_error not in ["mse", "quantile"]:
@@ -93,6 +94,7 @@ class DL85Regressor(DL85Predictor, RegressorMixin):
             print_output=print_output,
             backup_error=backup_error,
             quantile_value=quantile_value,
+            quantile_mode=quantile_mode,
         )
 
         self.to_redefine = self.leaf_value_function is None
@@ -102,9 +104,16 @@ class DL85Regressor(DL85Predictor, RegressorMixin):
     def mean_leaf_value(tids, y):
         return np.mean(y[list(tids)], axis=0)
 
-    @staticmethod
-    def quantile_leaf_value(tids, y, q):
+    @staticmethod 
+    def quantile_linear_estimation(tids, y, q):
         return np.quantile(y[list(tids)], q)
+    
+    @staticmethod 
+    def quantile_optimal_estimation(tids, y, q):
+        N = len(tids)
+        h = (N-1)*q
+        corrected_q = q if q == 0.5 else (floor(h)/(N-1) if q > 0.5 else ceil(h)/(N-1))
+        return np.quantile(y[list(tids)], corrected_q)
 
     def fit(self, X, y):
         """Implements the standard fitting function for a DL8.5 regressor.
@@ -134,7 +143,10 @@ class DL85Regressor(DL85Predictor, RegressorMixin):
             if self.backup_error == "mse":
                 self.leaf_value_function = lambda tids: self.mean_leaf_value(tids, y)
             elif self.backup_error == "quantile":
-                self.leaf_value_function = lambda tids: self.quantile_leaf_value(tids, y, self.quantile_value)
+                if self.quantile_mode == "linear":
+                    self.leaf_value_function = lambda tids: self.quantile_linear_estimation(tids, y, self.quantile_value)
+                elif self.quantile_mode == "optimal":
+                    self.leaf_value_function = lambda tids: self.quantile_optimal_estimation(tids, y, self.quantile_value)
 
         
 

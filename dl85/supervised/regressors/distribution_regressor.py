@@ -69,6 +69,7 @@ class DL85DistributionRegressor(DL85DistributionPredictor, RegressorMixin):
         leaf_value_function=None,
         print_output=False,
         quantiles=[0.5],
+        quantile_mode = "linear",
     ):
 
         
@@ -86,11 +87,27 @@ class DL85DistributionRegressor(DL85DistributionPredictor, RegressorMixin):
             leaf_value_function=leaf_value_function,
             print_output=print_output,
             quantiles=quantiles,
+            quantile_mode=quantile_mode,
         )
 
         self.to_redefine = self.leaf_value_function is None
         self.backup_error = "quantile"
 
+    @staticmethod 
+    def quantile_linear_estimation(tids, y, q):
+        return np.quantile(y[list(tids)], q)
+    
+    @staticmethod 
+    def quantile_optimal_estimation(tids, y, q):
+        N = len(tids)
+        h = (N-1)*q
+        y_sorted = sorted(y[list(tids)])
+        if q < 0.5:
+            return y_sorted[ceil(h)]
+        elif q == 0.5: 
+            return (y_sorted[floor(h)] + y_sorted[ceil(h)])/2
+        elif q > 0.5:
+            return y_sorted[floor(h)]
 
     def fit(self, X, y):
         """Implements the standard fitting function for a DL8.5 regressor.
@@ -107,6 +124,15 @@ class DL85DistributionRegressor(DL85DistributionPredictor, RegressorMixin):
         self : object
             Returns self.
         """
+        idx = np.argsort(y)
+        X = X[idx]
+        y = y[idx]
+
+        if self.to_redefine:
+            if self.quantile_mode == "linear":
+                self.leaf_value_function = lambda tids, q: self.quantile_linear_estimation(tids, y, q)
+            elif self.quantile_mode == "optimal":
+                self.leaf_value_function = lambda tids, q: self.quantile_optimal_estimation(tids, y, q)
 
         # call fit method of the predictor
         DL85DistributionPredictor.fit(self, X, y)

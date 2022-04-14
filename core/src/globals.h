@@ -55,12 +55,15 @@ extern float comptime;
 #define NO_DEPTH INT_MAX
 #define ZERO 0.f
 
-// Creating int and string constants for the different coded errors
+// Creating int for the different coded errors
 #define MISCLASSIFICATION_ERROR 0
-
 #define MSE_ERROR 1
-
 #define QUANTILE_ERROR 2
+
+
+// Creating int codes for the different quantile estimation modes
+#define LINEAR 0
+#define OPTIMAL 1
 
 // compute item value based on the attribute and its decision value
 #define item(attribute, value) ( attribute * 2 + value )
