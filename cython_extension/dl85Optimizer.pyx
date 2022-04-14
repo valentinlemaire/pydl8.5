@@ -69,7 +69,7 @@ cdef extern from "../core/src/dl85.h":
                     int backup_error,
                     float* quantiles,
                     int nquantiles,
-                    int quantile_mode,
+                    int quantile_estimation,
                     int timeLimit,
                     # map[int, pair[int, int]]* continuousMap,
                     # bool save,
@@ -94,7 +94,7 @@ def solve(data,
           repeat_sort=False,
           backup_error="misclassification",
           quantiles=np.array([0.5]),
-          quantile_mode="linear",
+          quantile_estimation="linear",
           # continuousMap=None,
           # bin_save=False,
           # predictor=False
@@ -122,10 +122,10 @@ def solve(data,
     elif backup_error == "quantile":
         backup_error_code = QUANTILE_ERROR
 
-    if quantile_mode == "linear":
-        quantile_mode_code = LINEAR 
-    elif quantile_mode == "optimal":
-        quantile_mode_code = OPTIMAL
+    if quantile_estimation == "linear":
+        quantile_estimation_code = LINEAR 
+    elif quantile_estimation == "optimal":
+        quantile_estimation_code = OPTIMAL
 
     data = data.astype('int32')
     ntransactions, nattributes = data.shape
@@ -269,7 +269,7 @@ def solve(data,
                  backup_error = backup_error_code,
                  quantiles = quantiles_array,
                  nquantiles = nquantiles,
-                 quantile_mode = quantile_mode_code,
+                 quantile_estimation = quantile_estimation_code,
                  timeLimit = time_limit,
                  # continuousMap = NULL,
                  # save = bin_save,

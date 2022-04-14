@@ -71,7 +71,7 @@ class DL85Regressor(DL85Predictor, RegressorMixin):
         print_output=False,
         backup_error="mse",
         quantile_value=0.5,
-        quantile_mode="linear",
+        quantile_estimation="linear",
     ):
 
         if backup_error not in ["mse", "quantile"]:
@@ -94,7 +94,7 @@ class DL85Regressor(DL85Predictor, RegressorMixin):
             print_output=print_output,
             backup_error=backup_error,
             quantile_value=quantile_value,
-            quantile_mode=quantile_mode,
+            quantile_estimation=quantile_estimation,
         )
 
         self.to_redefine = self.leaf_value_function is None
@@ -143,9 +143,9 @@ class DL85Regressor(DL85Predictor, RegressorMixin):
             if self.backup_error == "mse":
                 self.leaf_value_function = lambda tids: self.mean_leaf_value(tids, y)
             elif self.backup_error == "quantile":
-                if self.quantile_mode == "linear":
+                if self.quantile_estimation == "linear":
                     self.leaf_value_function = lambda tids: self.quantile_linear_estimation(tids, y, self.quantile_value)
-                elif self.quantile_mode == "optimal":
+                elif self.quantile_estimation == "optimal":
                     self.leaf_value_function = lambda tids: self.quantile_optimal_estimation(tids, y, self.quantile_value)
 
         

@@ -69,7 +69,7 @@ class DL85DistributionRegressor(DL85DistributionPredictor, RegressorMixin):
         leaf_value_function=None,
         print_output=False,
         quantiles=[0.5],
-        quantile_mode = "linear",
+        quantile_estimation = "linear",
     ):
 
         
@@ -87,7 +87,7 @@ class DL85DistributionRegressor(DL85DistributionPredictor, RegressorMixin):
             leaf_value_function=leaf_value_function,
             print_output=print_output,
             quantiles=quantiles,
-            quantile_mode=quantile_mode,
+            quantile_estimation=quantile_estimation,
         )
 
         self.to_redefine = self.leaf_value_function is None
@@ -129,9 +129,9 @@ class DL85DistributionRegressor(DL85DistributionPredictor, RegressorMixin):
         y = y[idx]
 
         if self.to_redefine:
-            if self.quantile_mode == "linear":
+            if self.quantile_estimation == "linear":
                 self.leaf_value_function = lambda tids, q: self.quantile_linear_estimation(tids, y, q)
-            elif self.quantile_mode == "optimal":
+            elif self.quantile_estimation == "optimal":
                 self.leaf_value_function = lambda tids, q: self.quantile_optimal_estimation(tids, y, q)
 
         # call fit method of the predictor

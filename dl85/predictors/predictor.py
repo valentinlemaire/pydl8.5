@@ -106,7 +106,7 @@ class DL85Predictor(BaseEstimator):
             print_output=False, 
             backup_error="misclassification",
             quantile_value=0.5,
-            quantile_mode="linear"):
+            quantile_estimation="linear"):
 
         self.max_depth = max_depth
         self.min_sup = min_sup
@@ -125,7 +125,7 @@ class DL85Predictor(BaseEstimator):
         self.quiet = quiet
         self.print_output = print_output
         self.quantile_value = quantile_value
-        self.quantile_mode = quantile_mode
+        self.quantile_estimation = quantile_estimation
 
         self.tree_ = None
         self.size_ = -1
@@ -201,7 +201,7 @@ class DL85Predictor(BaseEstimator):
                                        asc=self.asc,
                                        repeat_sort=self.repeat_sort,
                                        quantiles=np.array([self.quantile_value]),
-                                       quantile_mode=self.quantile_mode
+                                       quantile_estimation=self.quantile_estimation
                                     )
         # if self.print_output:
         #     print(solution)

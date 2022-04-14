@@ -24,7 +24,7 @@ class DL85DistributionPredictor(DL85Predictor):
             quiet=True,
             print_output=False, 
             quantiles=[0.5], 
-            quantile_mode="linear",
+            quantile_estimation="linear",
         ):
         
         self.max_depth = max_depth
@@ -44,7 +44,7 @@ class DL85DistributionPredictor(DL85Predictor):
         self.classes_ = []
         
         self.quantiles = sorted(quantiles)
-        self.quantile_mode = quantile_mode
+        self.quantile_estimation = quantile_estimation
 
         # if self.max_errors is None:
         #     self.max_errors = [0] * len(self.quantiles)
@@ -121,7 +121,7 @@ class DL85DistributionPredictor(DL85Predictor):
                                        asc=self.asc,
                                        repeat_sort=self.repeat_sort,
                                        quantiles=self.quantiles, 
-                                       quantile_mode=self.quantile_mode,
+                                       quantile_estimation=self.quantile_estimation,
                                     )
 
         solution = solution.splitlines()

@@ -18,7 +18,7 @@ class DataManager {
 public:
     int nWords;
 
-    DataManager(Supports supports, int ntransactions, int nattributes, int nclasses, int *b, int *c, double *y, int backup_error, float* quantiles, int nquantiles, int quantile_mode);
+    DataManager(Supports supports, int ntransactions, int nattributes, int nclasses, int *b, int *c, double *y, int backup_error, float* quantiles, int nquantiles, int quantile_estimation);
 
     ~DataManager(){
         for (int i = 0; i < nattributes; ++i) {
@@ -61,7 +61,7 @@ public:
 
     int getBackupError() const {return backup_error;}
 
-    int getQuantileMode() const {return quantile_mode;}
+    int getQuantileMode() const {return quantile_estimation;}
 
 private:
     bitset<M> **b; /// matrix of data
@@ -74,7 +74,7 @@ private:
     int backup_error; // code of the backup error to use
     float* quantiles; // quantile values for which we train trees
     int nquantiles; // number of quantiles (and hence decision trees to learn)
-    int quantile_mode; // quantile estimation mode when using quantile loss
+    int quantile_estimation; // quantile estimation mode when using quantile loss
 
 };
 

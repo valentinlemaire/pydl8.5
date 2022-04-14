@@ -87,7 +87,7 @@ string search(Supports supports,
               int backup_error = MISCLASSIFICATION_ERROR,
               float * quantiles = new float[1]{0.5},
               int nquantiles = 1,
-              int quantile_mode = LINEAR,
+              int quantile_estimation = LINEAR,
               int timeLimit = 0,
               bool verbose_param = false);
 

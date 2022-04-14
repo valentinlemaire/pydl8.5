@@ -28,7 +28,7 @@ string search(Supports supports,
               int backup_error,
               float* quantiles,
               int nquantiles,
-              int quantile_mode,
+              int quantile_estimation,
               int timeLimit,
               bool verbose_param) {
 
@@ -57,7 +57,7 @@ string search(Supports supports,
             maxError[i] = 0;
     }
 
-    auto *dataReader = new DataManager(supports, ntransactions, nattributes, nclasses, data, target, float_target, backup_error, quantiles, nquantiles, quantile_mode);
+    auto *dataReader = new DataManager(supports, ntransactions, nattributes, nclasses, data, target, float_target, backup_error, quantiles, nquantiles, quantile_estimation);
 
     vector<float> weights;
     if (in_weights) weights = vector<float>(in_weights, in_weights + ntransactions);
