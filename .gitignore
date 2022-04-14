@@ -34,6 +34,7 @@ core/cmake-build-release/
 core/tests_run/
 core/main_reg.cpp
 
+__pycache__/
 dl85/__pycache__/
 dl85/supervised/classifiers/__pycache__/
 dl85/supervised/classifiers/utils/__pycache__/

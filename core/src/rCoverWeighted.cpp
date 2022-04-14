@@ -4,7 +4,6 @@
 
 #include "rCoverWeighted.h"
 
-
 RCoverWeighted::RCoverWeighted(DataManager *dmm, vector<float>* weights):RCover(dmm, weights), weights(weights) {}
 
 RCoverWeighted::RCoverWeighted(RCoverWeighted &&cover, vector<float>* weights): RCover(move(cover)), weights(weights) {}
@@ -33,7 +32,8 @@ void RCoverWeighted::intersect(Attribute attribute, bool positive) {
             sup_class[n] += r.first;
         }
 
-        if (word.none() && dm->getBackupError() != MISCLASSIFICATION_ERROR){
+        // disabled if optimizing quantile error because we need to go through the elements in order of original indices
+        if (word.none() && (dm->getBackupError() != QUANTILE_ERROR)){
             int tmp = validWords[climit-1];
             validWords[climit-1] = validWords[i];
             validWords[i] = tmp;

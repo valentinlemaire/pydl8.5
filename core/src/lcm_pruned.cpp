@@ -49,11 +49,15 @@ TrieNode *getSolutionIfExists(TrieNode *node, RCover* cover, Query* query, Error
     Error* leafErrors = ((QDB) node->data)->leafErrors;
 
     // in case the solution exists because the error of a newly created node is set to FLT_MAX
-    bool solution_exists = true;
-    bool infeasible = true;
-    bool lowestreached = true;
+    bool can_return = true;
+
+    bool solution_exists=true;
+    bool infeasible=true;
+    bool lowestreached=true;
 
     for (int i = 0; i < cover->dm->getNQuantiles(); i++) {
+
+        // TODO Valentin: this works but seems to not prune enough
         if (nodeError[i] >= FLT_MAX) { 
             solution_exists = false;
         }
@@ -68,10 +72,26 @@ TrieNode *getSolutionIfExists(TrieNode *node, RCover* cover, Query* query, Error
             nodeError[i] = leafErrors[i];
         }
 
+        // TODO Valentin: prunes more, is it ok?
+        
+        // Cached solution is NO_TREE and is valid
+
+
+        // if (!(nodeError[i] < FLT_MAX || ub[i] <= saved_lb[i] || floatEqual(leafErrors[i], saved_lb[i]))) {
+        //     can_return = false;
+        // } 
+        // if (floatEqual(leafErrors[i], saved_lb[i])) {
+        //     nodeError[i] = leafErrors[i];
+        // }
+
     }
 
-    if (solution_exists)
+    // if (can_return)
+    //     return existingsolution(node, nodeError);
+
+    if (solution_exists) {
         return existingsolution(node, nodeError);
+    }
 
     if (infeasible) {
         return infeasiblecase(node, saved_lb, ub);
@@ -495,6 +515,7 @@ TrieNode *LcmPruned::recurse(Array<Item> itemset,
             itemsets[second_item].free();
             cover->backtrack();
 
+
             bool hasUpdated = query->updateData(node->data, child_ub, next, nodes[0]->data, nodes[1]->data, minlb);
             
             if (query->canSkip(node->data, cover->dm->getNQuantiles())) {//lowerBound reached
@@ -533,7 +554,6 @@ TrieNode *LcmPruned::recurse(Array<Item> itemset,
 
 
     delete[] child_ub;
-
     // we do not get solution and new lower bound is better than the old
 
     for (int i = 0; i < cover->dm->getNQuantiles(); i++) {
@@ -541,6 +561,7 @@ TrieNode *LcmPruned::recurse(Array<Item> itemset,
             lb[i] = max(ub[i], minlb[i]);
         }
     }
+
     
 
     Logger::showMessageAndReturn("depth = ", depth, " and init ub = ", ub, " and error after search = ", nodeError);

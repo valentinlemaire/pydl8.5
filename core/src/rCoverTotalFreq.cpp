@@ -26,7 +26,8 @@ void RCoverTotalFreq::intersect(Attribute attribute, bool positive) {
             sup_class[1] += word_sup - addzero;
         } else forEachClass(n) sup_class[n] += (word & dm->getClassCover(n)[validWords[i]]).count();
 
-        if (dm->getBackupError() != QUANTILE_ERROR && word.none()){
+        // disabled if optimizing quantile error because we need to go through the elements in order of original indices
+        if (word.none() && (dm->getBackupError() != QUANTILE_ERROR)){
             int tmp = validWords[climit-1];
             validWords[climit-1] = validWords[i];
             validWords[i] = tmp;

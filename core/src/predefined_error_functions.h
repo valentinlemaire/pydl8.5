@@ -30,6 +30,8 @@ class QuantileLossComputer {
         }
 
         Error * quantile_tids_errors(RCover* cover);
+        Error * quantile_tids_errors_fast(RCover* cover);
+        Error * quantile_tids_errors_slow(RCover* cover);
 };
 
 

@@ -28,5 +28,4 @@ public:
 
 };
 
-
 #endif //RSBS_RCOVER_TOTAL_FREQ_H

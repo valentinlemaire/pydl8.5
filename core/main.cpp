@@ -14,12 +14,12 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    string datasetPath = "../datasets/dataset.txt";//"../../datasets/gaussian-mixture.txt";
+    string datasetPath = "/Users/valentin/Git Repositories/pydl8.5/datasets/dataset.txt";
 
     ifstream dataset(datasetPath);
 
     string line;
-    int nfeatures = 5;
+    int nfeatures = 7;
 
     std::cout << "Reading dataset..." << std::endl;
     // map<int, SupportClass> supports; // for each class, compute the number of transactions (support)
@@ -63,10 +63,6 @@ int main(int argc, char *argv[]) {
 
     cout << "dataset: " << datasetPath.substr(datasetPath.find_last_of('/') + 1, datasetPath.find_last_of('.') - datasetPath.find_last_of('/') - 1) << endl;
 
-    for (int i = 0; i <counter; i ++){
-        cout << target[i] << " ";
-    }
-
     constexpr double dropout = 0.9; // Chance of 0
     random_device rd;
     mt19937 gen(rd());
@@ -104,7 +100,7 @@ int main(int argc, char *argv[]) {
                 new float[3]{0.2, 0.5, 0.8}, //quantiles
                 3, //nquantiles
                 0, //timeLimit
-                true // verbose parameter
+                false // verbose parameter
         );
 
     cout << result;

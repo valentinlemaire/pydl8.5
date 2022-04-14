@@ -37,5 +37,6 @@ public:
 
 };
 
+#define is_optimizing_quantiles (cover->dm->getBackupError() == QUANTILE_ERROR) && no_python_error
 
 #endif //RSBS_RCOVER_WEIGHTED_H

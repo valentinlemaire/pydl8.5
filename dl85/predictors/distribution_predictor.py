@@ -79,10 +79,12 @@ class DL85DistributionPredictor(DL85Predictor):
     @classmethod 
     def quantile_error(cls, y, q):
         y_p = np.quantile(y, q)
-        delta = y_p - y 
-        delta[delta > 0] *= q 
-        delta[delta < 0] *= (q - 1)
-        return np.sum(delta)
+
+        error = 0
+        for y_i in y:
+            error += max(q*(y_p - y_i), (q-1)*(y_p - y_i))
+
+        return error
 
     def fit(self, X, y, sample_weight=None):
         X, y = check_X_y(X, y, dtype='int32')
@@ -173,8 +175,11 @@ class DL85DistributionPredictor(DL85Predictor):
                             search(node['left'])
                             search(node['right'])
                         else:
+                            print(node['error'])
+                            print(self.quantile_error(y[list(node['transactions'])], self.quantiles[i]))
+
                             node['value'] = self.leaf_value_function(node['transactions'], self.quantiles[i])
-                            node['error'] = self.quantile_error(y[list(node['transactions'])], self.quantiles[i])
+                            node['error'] = leaf_fun(node['transactions'])
                     node = self.trees_[i]['tree']
                     search(node)
 
