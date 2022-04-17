@@ -2,6 +2,7 @@ from sklearn.base import RegressorMixin
 from ...predictors.distribution_predictor import DL85DistributionPredictor
 import numpy as np
 from math import floor, ceil
+import json
 
 
 class DL85DistributionRegressor(DL85DistributionPredictor, RegressorMixin):
@@ -153,3 +154,37 @@ class DL85DistributionRegressor(DL85DistributionPredictor, RegressorMixin):
         """
 
         return DL85DistributionPredictor.predict(self, X)
+
+
+    def save(self, filename:str):
+        """Saves the model in a file.
+        Parameters
+        ----------
+        filename : str
+            The name of the file where the model will be saved.
+        """
+    
+        with open(filename, "w") as f:
+            attr_dict = self.__dict__
+            del attr_dict['leaf_value_function']
+            json.dump(self.__dict__, f)
+
+    @classmethod
+    def load(cls, filename: str):
+        """Loads a model from a file.
+        Parameters
+        ----------
+        filename : str
+            The name of the file where the model is saved.
+        Returns
+        -------
+        model : DL85DistributionRegressor
+            The loaded model.
+        """
+        with open(filename, "r") as f:
+            attrs = json.load(f)
+        model = cls()
+        
+        for attr, value in attrs.items():
+            setattr(model, attr, value)
+        return model

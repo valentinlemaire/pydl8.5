@@ -14,7 +14,7 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    string datasetPath = "/Users/valentin/Git Repositories/pydl8.5/datasets/dataset.txt";
+    string datasetPath = "/Users/valentin/Git Repositories/pydl8.5/datasets/guassian-mixtures-100k.txt";
 
     ifstream dataset(datasetPath);
 
@@ -59,7 +59,6 @@ int main(int argc, char *argv[]) {
     }
     delete[] data_tmp;
 
-    int maxdepth = 3, minsup = 1;
 
     cout << "dataset: " << datasetPath.substr(datasetPath.find_last_of('/') + 1, datasetPath.find_last_of('.') - datasetPath.find_last_of('/') - 1) << endl;
 
@@ -81,8 +80,8 @@ int main(int argc, char *argv[]) {
                 data.data(), //data
                 nullptr, // classes
                 target.data(), //float target
-                3, //maxdepth
-                1, //minsup
+                5, //maxdepth
+                1000, //minsup
                 nullptr, //maxError
                 nullptr, //stopAfterError
                 nullptr, //tids_error_class_callback

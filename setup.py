@@ -2,7 +2,9 @@ from setuptools import Extension, find_packages, setup
 from Cython.Build import cythonize
 import platform
 import codecs
-from _version import __version__
+# from _version import __version__
+
+__version__ = "0.2.0"
 
 
 DISTNAME = 'pydl8.5'

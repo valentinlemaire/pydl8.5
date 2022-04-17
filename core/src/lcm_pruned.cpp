@@ -58,49 +58,49 @@ TrieNode *getSolutionIfExists(TrieNode *node, RCover* cover, Query* query, Error
     for (int i = 0; i < cover->dm->getNQuantiles(); i++) {
 
         // TODO Valentin: this works but seems to not prune enough
-        if (nodeError[i] >= FLT_MAX) { 
-            solution_exists = false;
-        }
+        // if (nodeError[i] >= FLT_MAX) { 
+        //     solution_exists = false;
+        // }
 
-        if (ub[i] > saved_lb[i]) { 
-            infeasible = false;
-        }
+        // if (ub[i] > saved_lb[i]) { 
+        //     infeasible = false;
+        // }
         
-        if (!floatEqual(leafErrors[i], saved_lb[i])) { 
-            lowestreached = false;
-        }  else {
-            nodeError[i] = leafErrors[i];
-        }
+        // if (!floatEqual(leafErrors[i], saved_lb[i])) { 
+        //     lowestreached = false;
+        // }  else {
+        //     nodeError[i] = leafErrors[i];
+        // }
 
         // TODO Valentin: prunes more, is it ok?
         
         // Cached solution is NO_TREE and is valid
 
 
-        // if (!(nodeError[i] < FLT_MAX || ub[i] <= saved_lb[i] || floatEqual(leafErrors[i], saved_lb[i]))) {
-        //     can_return = false;
-        // } 
-        // if (floatEqual(leafErrors[i], saved_lb[i])) {
-        //     nodeError[i] = leafErrors[i];
-        // }
+        if (!(nodeError[i] < FLT_MAX || ub[i] <= saved_lb[i] || floatEqual(leafErrors[i], saved_lb[i]))) {
+            can_return = false;
+        } 
+        if (floatEqual(leafErrors[i], saved_lb[i])) {
+            nodeError[i] = leafErrors[i];
+        }
 
     }
 
-    // if (can_return)
-    //     return existingsolution(node, nodeError);
-
-    if (solution_exists) {
+    if (can_return)
         return existingsolution(node, nodeError);
-    }
 
-    if (infeasible) {
-        return infeasiblecase(node, saved_lb, ub);
-    }
+    // if (solution_exists) {
+    //     return existingsolution(node, nodeError);
+    // }
 
-    // we reach the lowest value possible. implicitely, the upper bound constraint is not violated
-    if (lowestreached) {
-        return reachlowest(node, saved_lb, ub);
-    }
+    // if (infeasible) {
+    //     return infeasiblecase(node, saved_lb, ub);
+    // }
+
+    // // we reach the lowest value possible. implicitely, the upper bound constraint is not violated
+    // if (lowestreached) {
+    //     return reachlowest(node, saved_lb, ub);
+    // }
 
     // we cannot split tne node
     if (depth == query->maxdepth || cover->getSupport() < 2 * query->minsup) {
@@ -396,7 +396,7 @@ TrieNode *LcmPruned::recurse(Array<Item> itemset,
         Array<Item> itemsets[2];
         TrieNode *nodes[2];
         Error* first_lb;
-        Error* second_lb;
+        Error* second_lb = nullptr;
 
         /* the lower bound is computed for both items. they are used as heuristic to decide
          the first item to branch on. We branch on item with higher lower bound to have chance
@@ -457,7 +457,7 @@ TrieNode *LcmPruned::recurse(Array<Item> itemset,
         // perform the search for the first item
         nodes[first_item] = recurse(itemsets[first_item], next, nodes[first_item], next_attributes,  depth + 1, child_ub, first_lb);
 
-        if (is_python_error || default_is_misclassificaton) {
+        if (!(no_python_error && default_is_misclassificaton)) {
             delete[] first_lb;
         }
 
@@ -505,9 +505,6 @@ TrieNode *LcmPruned::recurse(Array<Item> itemset,
             // perform the search for the second item
             nodes[second_item] = recurse(itemsets[second_item], next, nodes[second_item], next_attributes, depth + 1, remainUb, second_lb);
 
-            if (is_python_error || default_is_misclassificaton) {
-                delete[] second_lb;
-            }
 
             // check if the found information is relevant to compute the next similarity bounds
             addInfoForLowerBound(nodes[second_item]->data, b1_cover, b2_cover, b1_error, b2_error, highest_coversize);
@@ -523,16 +520,24 @@ TrieNode *LcmPruned::recurse(Array<Item> itemset,
                 break; //prune remaining attributes not browsed yet
             }
         } else { //we do not attempt the second child, so we use its lower bound
-            for (int i = 0; i < cover->dm->getNQuantiles(); i++) {
-                // if the first error is unknown, we use its lower bound
-                if (floatEqual(firstError[i], FLT_MAX)) minlb[i] = min(minlb[i], first_lb[i] + second_lb[i]);
-                // otherwise, we use it
-                else minlb[i] = min(minlb[i], firstError[i] + second_lb[i]);
+            // but lower bound only computed for misclassification
+
+            if (is_python_error && default_is_misclassificaton) {
+                for (int i = 0; i < cover->dm->getNQuantiles(); i++) {
+                    // if the first error is unknown, we use its lower bound
+                    if (floatEqual(firstError[i], FLT_MAX)) minlb[i] = min(minlb[i], first_lb[i] + second_lb[i]);
+                    // otherwise, we use it
+                    else minlb[i] = min(minlb[i], firstError[i] + second_lb[i]);
+                }
             }
+            
 
 
             
         }
+
+        if (!(no_python_error && default_is_misclassificaton))
+            delete[] second_lb;
 
         
         bool canbreak = true;
@@ -542,8 +547,12 @@ TrieNode *LcmPruned::recurse(Array<Item> itemset,
                     canbreak = false;
                     break;
                 }
+            } else {
+                canbreak = false;
+                break;
             }
         }
+        
 
         if (canbreak) break;
         

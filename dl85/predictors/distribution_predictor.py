@@ -183,9 +183,6 @@ class DL85DistributionPredictor(DL85Predictor):
                             search(node['left'])
                             search(node['right'])
                         else:
-                            print(node['error'])
-                            print(error_fun(node['transactions']))
-
                             node['value'] = leaf_fun(node['transactions'])
                             node['error'] = error_fun(node['transactions'])
                     node = self.trees_[i]['tree']
