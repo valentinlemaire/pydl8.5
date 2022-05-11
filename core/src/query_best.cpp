@@ -44,7 +44,6 @@ QueryData_Best::~QueryData_Best() {
     delete[] rights;
 
     
-    std::cout << "deleted trie query data" << std::endl;
 }
 
 void Query_Best::printResult(Tree *tree, int quantile_idx)

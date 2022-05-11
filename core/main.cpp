@@ -109,4 +109,6 @@ int main(int argc, char *argv[])
     );
 
     cout << result;
+    data.clear();
+    target.clear();
 }

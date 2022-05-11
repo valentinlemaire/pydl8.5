@@ -16,7 +16,6 @@ TrieNode::~TrieNode()
 
 
     if (data) {
-        std::cout << "trying to delete data" << std::endl;
         delete ((QueryData_Best *) data); // free (data); assumed allocated with malloc
 
     }
