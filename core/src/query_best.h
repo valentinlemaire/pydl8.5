@@ -43,9 +43,21 @@ struct QueryData_Best {
         delete[] leafErrors;
         delete[] errors;
         delete[] lowerBounds;
-        delete[] lefts; 
-        delete[] rights;
         delete[] sizes;
+
+        for (int i = 0; i < n_quantiles; i++) {
+            if (lefts[i] != nullptr) {
+                delete lefts[i];
+                lefts[i] = nullptr;
+            }
+            if (rights[i] != nullptr) {
+                delete rights[i];
+                rights[i] = nullptr;
+            }
+        }
+
+        delete[] lefts;
+        delete[] rights;
     }
 
 

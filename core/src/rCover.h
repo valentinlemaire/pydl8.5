@@ -105,12 +105,8 @@ public:
 
         explicit iterator() : wordIndex(-1), container(nullptr) {}
 
-        int getFirstSetBitPos(long n)
+        int getFirstSetBitPos(u_long n)
         {   
-            // particular case, if n == 1 << 63, the log2 formula gives a negative number
-            if (n == (((u_long) 1) << 63)) {
-                return 64;
-            }
             return log2(n & -n) + 1;
         }
 

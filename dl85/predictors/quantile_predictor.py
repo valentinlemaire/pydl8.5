@@ -8,7 +8,7 @@ from dl85.predictors.predictor import DL85Predictor
 import numpy as np
 
 
-class DL85DistributionPredictor(DL85Predictor): 
+class DL85QuantilePredictor(DL85Predictor): 
     
     def __init__(self,
             max_depth=1,
@@ -16,6 +16,8 @@ class DL85DistributionPredictor(DL85Predictor):
             max_errors=None,
             stop_after_better=None,
             time_limit=0,
+            quantiles=[0.5], 
+            quantile_estimation="linear",
             verbose=False,
             desc=False,
             asc=False,
@@ -23,8 +25,6 @@ class DL85DistributionPredictor(DL85Predictor):
             leaf_value_function=None,
             quiet=True,
             print_output=False, 
-            quantiles=[0.5], 
-            quantile_estimation="linear",
         ):
         
         self.max_depth = max_depth
@@ -123,6 +123,8 @@ class DL85DistributionPredictor(DL85Predictor):
                                        quantiles=self.quantiles, 
                                        quantile_estimation=self.quantile_estimation,
                                     )
+
+                                    
 
         solution = solution.splitlines()
         self.sol_size = len(solution)
