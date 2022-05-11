@@ -15,7 +15,6 @@ struct QueryData_Best
     Error *lowerBounds = nullptr;
     Size *sizes = nullptr;
     int n_quantiles;
-    bool freed = false;
 
     QueryData_Best(int n_quantiles) : n_quantiles(n_quantiles)
     {

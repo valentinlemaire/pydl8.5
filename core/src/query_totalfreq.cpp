@@ -41,7 +41,9 @@ Query_TotalFreq::Query_TotalFreq(Support minsup,
                    }
 
 
-Query_TotalFreq::~Query_TotalFreq() {}
+Query_TotalFreq::~Query_TotalFreq() {
+    delete quantileLossComputer;
+}
 
 
 bool Query_TotalFreq::is_freq(pair<Supports, Support> supports) {

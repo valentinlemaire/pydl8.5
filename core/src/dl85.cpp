@@ -45,16 +45,21 @@ string search(Supports supports,
     verbose = verbose_param;
     string out = "";
 
+    bool free_sae = false;
+    bool free_me = false;
+
     if (stopAfterError == nullptr) {
         stopAfterError = new bool[nquantiles];
         for (int i = 0; i< nquantiles; i++) 
             stopAfterError[i] = false;
+        free_sae = true;
     }
 
     if (maxError == nullptr) {
         maxError = new float[nquantiles];
         for (int i = 0; i< nquantiles; i++) 
             maxError[i] = 0;
+        free_me = true;
     }
 
     auto *dataReader = new DataManager(supports, ntransactions, nattributes, nclasses, data, target, float_target, backup_error, quantiles, nquantiles, quantile_estimation);
@@ -107,6 +112,11 @@ string search(Supports supports,
     delete dataReader;
     delete cover;
     delete lcm;
+
+    if (free_sae)
+        delete[] stopAfterError;
+    if (free_me)
+        delete[] maxError;
 
     for (int i = 0; i < cover->dm->getNQuantiles(); i++) {
         delete out_trees[i];

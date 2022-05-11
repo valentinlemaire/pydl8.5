@@ -623,6 +623,7 @@ void LcmPruned::run() {
     query->realroot = recurse(itemset, NO_ATTRIBUTE, node, attributes_to_visit, 0, maxError, lbs);
 
     delete[] lbs;
+    delete[] maxError;
 
     // never forget to return back what is not yours. Think to others who need it ;-)
     itemset.free();

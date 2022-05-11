@@ -29,8 +29,6 @@ Query_Best::Query_Best(Support minsup,
 Query_Best::~Query_Best() {}
 
 QueryData_Best::~QueryData_Best() {
-    if (freed)
-        return;
     if (tests != nullptr)
         delete[] tests;
     if (leafErrors != nullptr)
@@ -42,23 +40,8 @@ QueryData_Best::~QueryData_Best() {
     if (sizes != nullptr)
         delete[] sizes;
 
-    for (int i = 0; i < n_quantiles; i++)
-    {
-        if (lefts != nullptr && lefts[i] != nullptr)
-        {
-            //delete lefts[i];
-            lefts[i] = nullptr;
-        }
-        if (rights != nullptr && rights[i] != nullptr)
-        {
-            //delete rights[i];
-            rights[i] = nullptr;
-        }
-    }
-
     delete[] lefts;
     delete[] rights;
-    freed = true;
 
     
     std::cout << "deleted trie query data" << std::endl;

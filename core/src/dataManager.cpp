@@ -61,6 +61,7 @@ DataManager::DataManager(Supports supports, int ntransactions, int nattributes, 
             c[i] = classCov;
         }
     }  else {
+        delete[] c;
         c = nullptr;
     }
 
