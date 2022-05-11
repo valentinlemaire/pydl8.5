@@ -6,13 +6,13 @@
 
 class QuantileLossComputer {
     int n_quantiles;
-    double *h;
-    int *h_low;
-    int *h_up;
-    double *y_low;
-    double *y_pred;
-    double *under;
-    double *above;
+    double *h = nullptr;
+    int *h_low = nullptr;
+    int *h_up = nullptr;
+    double *y_low = nullptr;
+    double *y_pred = nullptr;
+    double *under = nullptr;
+    double *above = nullptr;
 
 
 
