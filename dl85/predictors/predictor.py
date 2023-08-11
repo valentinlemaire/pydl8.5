@@ -1,4 +1,3 @@
-from statistics import quantiles
 from sklearn.base import BaseEstimator
 from sklearn.utils.validation import assert_all_finite, check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels
