@@ -148,7 +148,6 @@ class DL85Regressor(DL85Predictor, RegressorMixin):
                 elif self.quantile_estimation == "optimal":
                     self.leaf_value_function = lambda tids: self.quantile_optimal_estimation(tids, y, self.quantile_value)
 
-        
 
         # call fit method of the predictor
         DL85Predictor.fit(self, X, y)

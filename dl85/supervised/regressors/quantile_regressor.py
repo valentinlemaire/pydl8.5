@@ -106,7 +106,7 @@ class DL85QuantileRegressor(DL85QuantilePredictor, RegressorMixin):
         y_sorted = sorted(y[list(tids)])
         if q < 0.5:
             return y_sorted[ceil(h)]
-        elif q == 0.5: 
+        elif q == 0.5:
             return (y_sorted[floor(h)] + y_sorted[ceil(h)])/2
         elif q > 0.5:
             return y_sorted[floor(h)]
@@ -165,11 +165,22 @@ class DL85QuantileRegressor(DL85QuantilePredictor, RegressorMixin):
         filename : str
             The name of the file where the model will be saved.
         """
-    
+        def recurse(dictionary):
+            for key, value in dictionary.items():
+                if isinstance(value, dict):
+                    recurse(value)
+                if isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, dict):
+                            recurse(item)
+                elif isinstance(value, np.int64):
+                    dictionary[key] = int(value)
+
         with open(filename, "w") as f:
-            attr_dict = self.__dict__
+            attr_dict = self.__dict__.copy()
             del attr_dict['leaf_value_function']
-            json.dump(self.__dict__, f)
+            recurse(attr_dict)
+            json.dump(attr_dict, f)
 
     @classmethod
     def load(cls, filename: str):

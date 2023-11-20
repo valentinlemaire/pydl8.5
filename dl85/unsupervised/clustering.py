@@ -1,12 +1,13 @@
-from sklearn.base import ClusterMixin
-from sklearn.utils.validation import assert_all_finite, check_array
-from sklearn.neighbors import DistanceMetric
-from ..predictors.predictor import DL85Predictor
 import numpy as np
+from sklearn.base import ClusterMixin
+from sklearn.metrics import DistanceMetric
+from sklearn.utils.validation import assert_all_finite, check_array
+
+from ..predictors.predictor import DL85Predictor
 
 
 class DL85Cluster(DL85Predictor, ClusterMixin):
-    """ An optimal binary decision tree classifier.
+    """An optimal binary decision tree classifier.
 
     Parameters
     ----------
@@ -54,41 +55,46 @@ class DL85Cluster(DL85Predictor, ClusterMixin):
     """
 
     def __init__(
+        self,
+        max_depth=1,
+        min_sup=1,
+        error_function=None,
+        max_error=0,
+        stop_after_better=False,
+        time_limit=0,
+        verbose=False,
+        desc=False,
+        asc=False,
+        repeat_sort=False,
+        leaf_value_function=None,
+        print_output=False,
+    ):
+        DL85Predictor.__init__(
             self,
-            max_depth=1,
-            min_sup=1,
-            error_function=None,
-            max_error=0,
-            stop_after_better=False,
-            time_limit=0,
-            verbose=False,
-            desc=False,
-            asc=False,
-            repeat_sort=False,
-            leaf_value_function=None,
-            print_output=False):
-
-        DL85Predictor.__init__(self,
-                               max_depth=max_depth,
-                               min_sup=min_sup,
-                               error_function=error_function,
-                               fast_error_function=None,
-                               max_error=max_error,
-                               stop_after_better=stop_after_better,
-                               time_limit=time_limit,
-                               verbose=verbose,
-                               desc=desc,
-                               asc=asc,
-                               repeat_sort=repeat_sort,
-                               leaf_value_function=leaf_value_function,
-                               print_output=print_output)
+            max_depth=max_depth,
+            min_sup=min_sup,
+            error_function=error_function,
+            fast_error_function=None,
+            max_error=max_error,
+            stop_after_better=stop_after_better,
+            time_limit=time_limit,
+            verbose=verbose,
+            desc=desc,
+            asc=asc,
+            repeat_sort=repeat_sort,
+            leaf_value_function=leaf_value_function,
+            print_output=print_output,
+        )
 
     @staticmethod
     def default_error(tids, X):
-        dist = DistanceMetric.get_metric('euclidean')
-        X_subset = np.asarray([X[index, :] for index in list(tids)], dtype='int32')
+        dist = DistanceMetric.get_metric("euclidean")
+        X_subset = np.asarray([X[index, :] for index in list(tids)], dtype="int32")
         centroid = np.mean(X_subset, axis=0).reshape(1, X_subset.shape[1])
-        distances = [dist.pairwise(instance.reshape(1, X_subset.shape[1]), centroid)[0, 0] for instance in X_subset]
+        distances = [
+            dist.pairwise(instance.reshape(1, X_subset.shape[1]), centroid)[0, 0]
+            for instance in X_subset
+        ]
         return round(sum(distances), 2)
 
     @staticmethod
@@ -114,7 +120,7 @@ class DL85Cluster(DL85Predictor, ClusterMixin):
         # Check that X_error has correct shape and raise ValueError if not
         if X_error is not None:
             assert_all_finite(X_error)
-            X_error = check_array(X_error, dtype='int32')
+            X_error = check_array(X_error, dtype="int32")
 
         if self.error_function is None:
             if X_error is None:
@@ -123,16 +129,22 @@ class DL85Cluster(DL85Predictor, ClusterMixin):
                 if X_error.shape[0] == X.shape[0]:
                     self.error_function = lambda tids: self.default_error(tids, X_error)
                 else:
-                    raise ValueError("X_error does not have the same number of rows as X")
+                    raise ValueError(
+                        "X_error does not have the same number of rows as X"
+                    )
 
         if self.leaf_value_function is None:
             if X_error is None:
                 self.leaf_value_function = lambda tids: self.default_leaf_value(tids, X)
             else:
                 if X_error.shape[0] == X.shape[0]:
-                    self.leaf_value_function = lambda tids: self.default_leaf_value(tids, X_error)
+                    self.leaf_value_function = lambda tids: self.default_leaf_value(
+                        tids, X_error
+                    )
                 else:
-                    raise ValueError("X_error does not have the same number of rows as X")
+                    raise ValueError(
+                        "X_error does not have the same number of rows as X"
+                    )
 
         # call fit method of the predictor
         DL85Predictor.fit(self, X)
@@ -142,7 +154,7 @@ class DL85Cluster(DL85Predictor, ClusterMixin):
         return self
 
     def predict(self, X):
-        """ Implements the standard predict function for a DL8.5 classifier.
+        """Implements the standard predict function for a DL8.5 classifier.
 
         Parameters
         ----------
@@ -159,5 +171,3 @@ class DL85Cluster(DL85Predictor, ClusterMixin):
         return DL85Predictor.predict(self, X)
 
         # return self.y_
-
-
